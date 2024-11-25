@@ -42,6 +42,8 @@ public class Grafo
         {
             Nodos[nombre] = new Nodo(nombre);
         }
+        Console.WriteLine("El nodo ya existe en el grafo.");
+        
     }
 
     public void AgregarArista(string origen, string destino, int costo)
