@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 public class Vertice
 {
     public Nodo Destino { get; set; }
@@ -30,10 +34,12 @@ public class Nodo
 public class Grafo
 {
     public Dictionary<string, Nodo> Nodos { get; set; }
+    public string Unidad { get; set; }
 
     public Grafo()
     {
         Nodos = new Dictionary<string, Nodo>();
+        Unidad = "unidad"; // Unidad predeterminada
     }
 
     public void AgregarNodo(string nombre)
@@ -42,8 +48,6 @@ public class Grafo
         {
             Nodos[nombre] = new Nodo(nombre);
         }
-        Console.WriteLine("El nodo ya existe en el grafo.");
-        
     }
 
     public void AgregarArista(string origen, string destino, int costo)
@@ -71,8 +75,8 @@ public class Grafo
         Nodo nodoInicio = Nodos[inicio];
         Nodo nodoFin = Nodos[fin];
 
-        HashSet<Nodo> visitados = new HashSet<Nodo>();
-        List<string> caminoActual = new List<string> { inicio };
+        List<Nodo> visitados = new List<Nodo>();
+        List<string> caminoActual = new List<string>();
         int costoActual = 0;
 
         DFS(nodoInicio, nodoFin, visitados, caminoActual, costoActual, caminos);
@@ -80,27 +84,28 @@ public class Grafo
         return caminos;
     }
 
-    private void DFS(Nodo actual, Nodo destino, HashSet<Nodo> visitados, List<string> caminoActual, int costoActual, List<Tuple<List<string>, int>> caminos)
+    private void DFS(Nodo actual, Nodo destino, List<Nodo> visitados, List<string> caminoActual, int costoActual, List<Tuple<List<string>, int>> caminos)
     {
+        visitados.Add(actual);
+        caminoActual.Add(actual.Nombre);
+
         if (actual == destino)
         {
             caminos.Add(new Tuple<List<string>, int>(new List<string>(caminoActual), costoActual));
-            return;
         }
-
-        visitados.Add(actual);
-
-        foreach (Vertice vertice in actual.Vertices)
+        else
         {
-            if (!visitados.Contains(vertice.Destino))
+            foreach (Vertice vertice in actual.Vertices)
             {
-                caminoActual.Add(vertice.Destino.Nombre);
-                DFS(vertice.Destino, destino, visitados, caminoActual, costoActual + vertice.Costo, caminos);
-                caminoActual.RemoveAt(caminoActual.Count - 1);
+                if (!visitados.Contains(vertice.Destino))
+                {
+                    DFS(vertice.Destino, destino, visitados, caminoActual, costoActual + vertice.Costo, caminos);
+                }
             }
         }
 
         visitados.Remove(actual);
+        caminoActual.RemoveAt(caminoActual.Count - 1);
     }
 
     public void MostrarCaminos(string inicio, string fin)
@@ -116,11 +121,36 @@ public class Grafo
         Console.WriteLine($"Todos los caminos entre {inicio} y {fin}:");
         foreach (var camino in caminos)
         {
-            Console.WriteLine($"Camino: {string.Join(" -> ", camino.Item1)}, Costo: {camino.Item2}");
+            string representacionCamino = "";
+
+            for (int i = 0; i < camino.Item1.Count - 1; i++)
+            {
+                string origen = camino.Item1[i];
+                string destino = camino.Item1[i + 1];
+                Vertice arista = Nodos[origen].Vertices.First(v => v.Destino.Nombre == destino);
+
+                representacionCamino += $"{origen} -({arista.Costo} {Unidad})-> ";
+            }
+            representacionCamino += camino.Item1.Last();
+
+            Console.WriteLine($"Camino: {representacionCamino}, Costo total: {camino.Item2} {Unidad}");
         }
 
         var caminoMasCorto = caminos.MinBy(c => c.Item2);
         Console.WriteLine("\nEl camino más corto:");
-        Console.WriteLine($"Camino: {string.Join(" -> ", caminoMasCorto.Item1)}, Costo: {caminoMasCorto.Item2}");
+        string caminoCorto = "";
+
+        for (int i = 0; i < caminoMasCorto.Item1.Count - 1; i++)
+        {
+            string origen = caminoMasCorto.Item1[i];
+            string destino = caminoMasCorto.Item1[i + 1];
+            Vertice arista = Nodos[origen].Vertices.First(v => v.Destino.Nombre == destino);
+
+            caminoCorto += $"{origen} -({arista.Costo} {Unidad})-> ";
+        }
+        caminoCorto += caminoMasCorto.Item1.Last();
+
+        Console.WriteLine($"Camino: {caminoCorto}, Costo total: {caminoMasCorto.Item2} {Unidad}");
     }
 }
+
